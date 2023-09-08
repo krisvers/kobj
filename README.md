@@ -1,2 +1,2 @@
 # kobj
-Wavefront OBJ Parser written in C99
+Parser for a subset of Wavefront OBJ written in C99
