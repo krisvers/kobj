@@ -7,9 +7,11 @@ Parser for a subset of Wavefront OBJ written in C99
 - `vt` vertex texture UVs
 - `f` supports only face indices (`f v1 v2 v3` not `f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3`)
 
-### usage example (C standard libraries error checking omitted for brevity)
+### usage example in C (C standard libraries error checking omitted for brevity)
 ```c
 #include "kobj/kobj.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 void foo() {
   FILE * fp = fopen("model.obj", "rb");
@@ -61,3 +63,61 @@ void foo() {
   // do stuff with the arrays
 }
 ```
+
+### usage example in C++
+```c++
+#include "kobj/kobj.h"
+#include <iostream>
+#include <fstream>
+#include <vector>
+
+void foo() {
+  std::ifstream file("model.obj");
+  std::string string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+
+  unsinged int flags;
+  std::vector<float> vertices;
+  std::vector<unsigned int> indices;
+  std::vector<float> normals;
+  std::vector<float> uvs;
+  {
+    unsigned long long int vertex_count;
+    unsigned long long int index_count;
+    unsigned long long int normal_count;
+    unsigned long long int uv_count;
+
+    // retrieve lengths
+    if (kobj_parse(
+          buffer, length,
+          &flags,
+          NULL, &vertex_count,
+          NULL, &index_count,
+          NULL, &normal_count,
+          NULL, &uv_count
+    ) < KOBJ_SUCCESS) {
+      // kobj_parse error
+      return 1;
+    }
+
+    // reserve space for the vectors
+    vertices.reserve(vertex_count);
+    indices.reserve(index_count);
+    normals.reserve(normal_count);
+    uvs.reserve(uv_count);
+
+    // load data
+    if (kobj_parse(
+          buffer, length,
+          NULL,
+          vertices.data(), NULL,
+          indices.data(), NULL,
+          normals.data(), NULL,
+          uvs.data(), NULL
+    ) < KOBJ_SUCCESS) {
+      // kobj_parse error
+      return 2;
+    }
+  }
+
+  // do stuff
+}
