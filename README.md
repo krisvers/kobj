@@ -28,7 +28,14 @@ void foo() {
   unsigned long long int uv_count;
 
   // retrieving lengths of the arrays for future allocation
-  if (kobj_parse(buffer, length, &flags, NULL, &vertex_count, NULL, &index_count, NULL, &normal_count, NULL, &uv_count) < KOBJ_SUCCESS) {
+  if (kobj_parse(
+        buffer, length,
+        &flags,
+        NULL, &vertex_count,
+        NULL, &index_count,
+        NULL, &normal_count,
+        NULL, &uv_count
+  ) < KOBJ_SUCCESS) {
     // kobj_parse error
     return 1;
   }
@@ -39,7 +46,14 @@ void foo() {
   float * uvs = malloc(sizeof(float) * uv_count * 2);
 
   // loading values into the already allocated arrays
-  if (kobj_parse(buffer, length, &flags, vertices, NULL, indices, NULL, normals, NULL, uvs, NULL) < KOBJ_SUCCESS) {
+  if (kobj_parse(
+        buffer, length,
+        NULL,
+        vertices, NULL,
+        indices, NULL,
+        normals, NULL,
+        uvs, NULL
+  ) < KOBJ_SUCCESS) {
     // kobj_parse error
     return 2;
   }
