@@ -23,8 +23,27 @@ void foo() {
 
   unsinged int flags;
   unsigned long long int vertex_count;
-  if (kobj_parse()) {
+  unsigned long long int index_count;
+  unsigned long long int normal_count;
+  unsigned long long int uv_count;
 
+  // retrieving lengths of the arrays for future allocation
+  if (kobj_parse(buffer, length, &flags, NULL, &vertex_count, NULL, &index_count, NULL, &normal_count, NULL, &uv_count) < KOBJ_SUCCESS) {
+    // kobj_parse error
+    return 1;
   }
+
+  float * vertices = malloc(sizeof(float) * vertex_count * 3);
+  unsigned int indices = malloc(sizeof(unsigned int) * index_count * 3);
+  float * normals = malloc(sizeof(float) * normal_count * 3);
+  float * uvs = malloc(sizeof(float) * uv_count * 2);
+
+  // loading values into the already allocated arrays
+  if (kobj_parse(buffer, length, &flags, vertices, NULL, indices, NULL, normals, NULL, uvs, NULL) < KOBJ_SUCCESS) {
+    // kobj_parse error
+    return 2;
+  }
+
+  // do stuff with the arrays
 }
 ```
