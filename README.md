@@ -23,7 +23,7 @@ void foo() {
   fread(buffer, 1, length, fp);
   fclose(fp);
 
-  unsinged int flags;
+  unsigned int flags;
   unsigned long long int vertex_count;
   unsigned long long int index_count;
   unsigned long long int normal_count;
@@ -75,7 +75,7 @@ void foo() {
   std::ifstream file("model.obj");
   std::string string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
 
-  unsinged int flags;
+  unsigned int flags;
   std::vector<float> vertices;
   std::vector<unsigned int> indices;
   std::vector<float> normals;
