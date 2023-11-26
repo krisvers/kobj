@@ -1,220 +1,208 @@
 #include "kobj.h"
-#include <stdio.h>
 #include <stdlib.h>
-#include <ctype.h>
+#include <string.h>
 
-kobj_success_enum kobj_parse(void * buffer, unsigned long long int length, unsigned int * out_flags, float * out_vertices, unsigned long long int * out_vertices_length, unsigned int * out_indices, unsigned long long int * out_indices_length, float * out_normals, unsigned long long int * out_normals_length, float * out_uv, unsigned long long int * out_uv_length) {
-	unsigned long long int i = 0;
-	unsigned long long int current = 0;
-	int state = 0;
-	char started = 0;
-	char c = ' ';
-	char prevc = ' ';
-	char nextc = ' ';
-
-	float current_float = 0;
-	unsigned long long int current_llu = 0;
-
-	struct {
-		unsigned long long int length;
-		char * start;
-	} word;
-
-	if (out_flags != NULL) {
-		*out_flags = 0;
+int kobj_load(kobj_t * out_obj, void * buffer, unsigned long long int length) {
+	if (out_obj == NULL || buffer == NULL || length == 0) {
+		return 1;
 	}
 
-	while (i < length) {
-		if (i + 1 < length) {
-			nextc = ((char *) buffer)[i + 1];
+	char * str = buffer;
+
+	unsigned int vindex;
+	unsigned int uvindex;
+	unsigned int nindex;
+	unsigned int findex;
+	char c;
+	char nextc;
+	char * endptr;
+	float f;
+	unsigned int u;
+	unsigned char runthrough = 0;
+
+top:;
+	vindex = 0;
+	uvindex = 0;
+	nindex = 0;
+	findex = 0;
+	c = 0;
+	nextc = 0;
+	endptr = NULL;
+	f = 0;
+	u = 0;
+
+	for (unsigned int i = 0; i < length; ++i) {
+		c = str[i];
+		nextc = (i + 1 < length) ? str[i + 1] : 0;
+		if (c == '#' || c == 'o' == c == 'm' || c == 'u' || c == 'l' || c == 's' || (c == 'v' && nextc == 'p')) {
+			while (c != '\n') {
+				c = str[++i];
+			}
 		}
-
-		prevc = c;
-		c = ((char *) buffer)[i];
-
-		switch (started) {
-			case 1:
-				if ((isalnum(c) && !isalpha(c)) || c == '-') {
-					word.start = &((char *) buffer)[i];
-					word.length = 1;
-					started = 2;
+		else if (c == 'v') {
+			if (nextc == ' ') {
+				if (!runthrough) { ++out_obj->vcount; }
+				i += 2;
+				f = strtof(&str[i], &endptr);
+				if (out_obj->vertices != NULL) {
+					out_obj->vertices[vindex++] = f;
 				}
-				goto kobj_parse_next;
-			case 2:
-				++word.length;
-				if (c == '\n') {
-					current_float = strtof(word.start, NULL);
-					if (out_vertices != NULL) {
-						out_vertices[current] = current_float;
-					}
-					++current;
-					word.start = NULL;
-					started = 0;
+				i = ((unsigned long long int) endptr - ((unsigned long long int) str));
+				f = strtof(&str[i], &endptr);
+				if (out_obj->vertices != NULL) {
+					out_obj->vertices[vindex++] = f;
 				}
-				if (c == ' ') {
-					current_float = strtof(word.start, NULL);
-					if (out_vertices != NULL) {
-						out_vertices[current] = current_float;
-					}
-					++current;
-					word.start = NULL;
-					started = 1;
+				i = ((unsigned long long int) endptr - ((unsigned long long int) str));
+				f = strtof(&str[i], &endptr);
+				if (out_obj->vertices != NULL) {
+					out_obj->vertices[vindex++] = f;
 				}
-				goto kobj_parse_next;
-			case 3:
-				if ((isalnum(c) && !isalpha(c)) || c == '-') {
-					word.start = &((char *) buffer)[i];
-					word.length = 1;
-					started = 4;
+				i = ((unsigned long long int) endptr - ((unsigned long long int) str));
+			}
+			else if (nextc == 'n') {
+				if (!runthrough) { ++out_obj->ncount; }
+				i += 3;
+				f = strtof(&str[i], &endptr);
+				if (out_obj->normals != NULL) {
+					out_obj->normals[nindex++] = f;
 				}
-				goto kobj_parse_next;
-			case 4:
-				++word.length;
-				if (c == '\n') {
-					current_float = strtof(word.start, NULL);
-					if (out_normals != NULL) {
-						out_normals[current] = current_float;
-					}
-					++current;
-					word.start = NULL;
-					started = 0;
+				i = ((unsigned long long int) endptr - ((unsigned long long int) str));
+				f = strtof(&str[i], &endptr);
+				if (out_obj->normals != NULL) {
+					out_obj->normals[nindex++] = f;
 				}
-				if (c == ' ') {
-					current_float = strtof(word.start, NULL);
-					if (out_normals != NULL) {
-						out_normals[current] = current_float;
-					}
-					++current;
-					word.start = NULL;
-					started = 3;
+				i = ((unsigned long long int) endptr - ((unsigned long long int) str));
+				f = strtof(&str[i], &endptr);
+				if (out_obj->normals != NULL) {
+					out_obj->normals[nindex++] = f;
 				}
-				goto kobj_parse_next;
-			case 5:
-				if ((isalnum(c) && !isalpha(c))) {
-					word.start = &((char *) buffer)[i];
-					word.length = 1;
-					started = 6;
+				i = ((unsigned long long int) endptr - ((unsigned long long int) str));
+			}
+			else if (nextc == 't') {
+				if (!runthrough) { ++out_obj->uvcount; }
+				i += 3;
+				f = strtof(&str[i], &endptr);
+				if (out_obj->uvs != NULL) {
+					out_obj->uvs[uvindex++] = f;
 				}
-				goto kobj_parse_next;
-			case 6:
-				++word.length;
-				if (c == '\n') {
-					current_float = strtof(word.start, NULL);
-					if (out_uv != NULL) {
-						out_uv[current] = current_float;
-					}
-					++current;
-					word.start = NULL;
-					started = 0;
+				i = ((unsigned long long int) endptr - ((unsigned long long int) str));
+				f = strtof(&str[i], &endptr);
+				if (out_obj->uvs != NULL) {
+					out_obj->uvs[uvindex++] = f;
 				}
-				if (c == ' ') {
-					current_float = strtof(word.start, NULL);
-					if (out_uv != NULL) {
-						out_uv[current] = current_float;
-					}
-					++current;
-					word.start = NULL;
-					started = 5;
-				}
-				goto kobj_parse_next;
-			case 7:
-				if ((isalnum(c) && !isalpha(c))) {
-					word.start = &((char *) buffer)[i];
-					word.length = 1;
-					started = 8;
-				}
-				goto kobj_parse_next;
-			case 8:
-				++word.length;
-				if (c == '\n') {
-					current_llu = strtoull(word.start, NULL, 10);
-					if (out_indices != NULL) {
-						out_indices[current] = current_llu;
-					}
-					++current;
-					word.start = NULL;
-					started = 0;
-				}
-				if (c == ' ') {
-					current_llu = strtoull(word.start, NULL, 10);
-					if (out_indices != NULL) {
-						out_indices[current] = current_llu;
-					}
-					++current;
-					word.start = NULL;
-					started = 7;
-				}
-				goto kobj_parse_next;
-			default:
-			case 0:
-				break;
+				i = ((unsigned long long int) endptr - ((unsigned long long int) str));
+			}
 		}
+		else if (c == 'f') {
+			i += 2;
 
-		if (c == '\n') {
-			started = 0;
+			u = strtoul(&str[i], &endptr, 10);
+			if (out_obj->faces != NULL) {
+				out_obj->faces[findex].v1 = u;
+			}
+			i = ((unsigned long long int) endptr - ((unsigned long long int) str));
+			if (str[i] == '/') {
+				++i;
+				u = strtoul(&str[i], &endptr, 10);
+				if (out_obj->faces != NULL) {
+					out_obj->faces[findex].vt1 = u;
+				}
+				i = ((unsigned long long int) endptr - ((unsigned long long int) str));
+				if (str[i] == '/') {
+					++i;
+					u = strtoul(&str[i], &endptr, 10);
+					if (out_obj->faces != NULL) {
+						out_obj->faces[findex].vn1 = u;
+					}
+					i = ((unsigned long long int) endptr - ((unsigned long long int) str));
+				}
+			}
+
+			if (str[i] == ' ') {
+				u = strtoul(&str[i], &endptr, 10);
+				if (out_obj->faces != NULL) {
+					out_obj->faces[findex].v2 = u;
+				}
+				i = ((unsigned long long int) endptr - ((unsigned long long int) str));
+				if (str[i] == '/') {
+					++i;
+					u = strtoul(&str[i], &endptr, 10);
+					if (out_obj->faces != NULL) {
+						out_obj->faces[findex].vt2 = u;
+					}
+					i = ((unsigned long long int) endptr - ((unsigned long long int) str));
+					if (str[i] == '/') {
+						++i;
+						u = strtoul(&str[i], &endptr, 10);
+						if (out_obj->faces != NULL) {
+							out_obj->faces[findex].vn2 = u;
+						}
+						i = ((unsigned long long int) endptr - ((unsigned long long int) str));
+					}
+				}
+
+				if (str[i] == ' ') {
+					u = strtoul(&str[i], &endptr, 10);
+					if (out_obj->faces != NULL) {
+						out_obj->faces[findex].v3 = u;
+					}
+					i = ((unsigned long long int) endptr - ((unsigned long long int) str));
+					if (str[i] == '/') {
+						++i;
+						u = strtoul(&str[i], &endptr, 10);
+						if (out_obj->faces != NULL) {
+							out_obj->faces[findex].vt3 = u;
+						}
+						i = ((unsigned long long int) endptr - ((unsigned long long int) str));
+						if (str[i] == '/') {
+							++i;
+							u = strtoul(&str[i], &endptr, 10);
+							if (out_obj->faces != NULL) {
+								out_obj->faces[findex].vn3 = u;
+							}
+							i = ((unsigned long long int) endptr - ((unsigned long long int) str));
+						}
+					}
+				}
+			}
+			++findex;
+			if (!runthrough) { ++out_obj->fcount; }
 		}
-		if (c == 'v' && nextc == ' ') {
-			if (state != 1) {
-				current = 0;
-			}
-			state = 1;
-			if (out_vertices_length != NULL) {
-				++(*out_vertices_length);
-			}
-
-			started = 1;
-		}
-		if (c == 'v' && nextc == 'n') {
-			if (out_flags != NULL) {
-				*out_flags |= KOBJ_FLAG_NORMAL;
-			}
-
-			if (state != 2) {
-				current = 0;
-			}
-			state = 2;
-			if (out_normals_length != NULL) {
-				++(*out_normals_length);
-			}
-
-			started = 3;
-		}
-		if (c == 'v' && nextc == 't') {
-			if (out_flags != NULL) {
-				*out_flags |= KOBJ_FLAG_UV;
-			}
-			if (state != 3) {
-				current = 0;
-			}
-			state = 3;
-			if (out_uv_length != NULL) {
-				++(*out_uv_length);
-			}
-
-			started = 5;
-		}
-		if (c == 'f' && nextc == ' ') {
-			if (out_flags != NULL) {
-				*out_flags |= KOBJ_FLAG_FACE;
-			}
-
-			if (state != 4) {
-				current = 0;
-			}
-			state = 4;
-			if (out_indices_length != NULL) {
-				++(*out_indices_length);
-			}
-
-			started = 7;
-		}
-		if (c == ' ') {
-			goto kobj_parse_next;
-		}
-
-	kobj_parse_next:
-		++i;
 	}
 
-	return KOBJ_SUCCESS;
+	if (out_obj->vertices == NULL) {
+		out_obj->vertices = malloc(out_obj->vcount * 3 * sizeof(float));
+		memset(out_obj->vertices, 0, out_obj->vcount * 3 * sizeof(float));
+	}
+	if (out_obj->normals == NULL) {
+		out_obj->normals = malloc(out_obj->ncount * 3 * sizeof(float));
+		memset(out_obj->normals, 0, out_obj->ncount * 3 * sizeof(float));
+	}
+	if (out_obj->uvs == NULL) {
+		out_obj->uvs = malloc(out_obj->uvcount * 2 * sizeof(float));
+		memset(out_obj->uvs, 0, out_obj->uvcount * 2 * sizeof(float));
+	}
+	if (out_obj->faces == NULL) {
+		out_obj->faces = malloc(out_obj->fcount * sizeof(kobj_face_t));
+		memset(out_obj->faces, 0, out_obj->fcount * sizeof(kobj_face_t));
+		runthrough = 1;
+		goto top;
+	}
+
+	return 0;
+}
+
+void kobj_destroy(kobj_t * obj) {
+	if (obj->vertices != NULL) {
+		free(obj->vertices);
+	}
+	if (obj->normals != NULL) {
+		free(obj->normals);
+	}
+	if (obj->uvs != NULL) {
+		free(obj->uvs);
+	}
+	if (obj->faces != NULL) {
+		free(obj->faces);
+	}
 }
