@@ -2,7 +2,43 @@
 Parser for a subset of Wavefront OBJ written in C99
 
 ### supported:
-- `v` any dimension vertex positions
-- `vn` per-vertex normals (per-face normals may be supported later)
-- `vt` vertex texture UVs
-- `f` supports only face indices (`f v1 v2 v3` not `f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3`)
+- the basics required for vertices, normals, tex coordinates, and faces
+
+### unsupported:
+- mtl
+- listing vertices or normals or tex coords not in one go
+  - example
+    supported:
+    ```obj
+    v 1 1 1
+    v 1 0 1
+    v 0 1 0
+    ...
+    v 1 1 0
+
+    vn 1 0 1
+    ...
+    vn 0 1 1
+
+    vt 0 0
+    vt 1 0
+    ...
+    vt 1 1
+    ```
+    unsupported:
+    ```obj
+    v 1 1 1
+    vn 1 0 1
+    vt 0 1
+    ...
+    v 1 1 0
+
+    v 1 0 1
+    ...
+    vt 0 1
+
+    vt 0 0
+    vn 1 0 1
+    ...
+    vn 1 1 0
+    ```
